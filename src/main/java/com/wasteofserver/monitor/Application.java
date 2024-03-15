@@ -1,55 +1,38 @@
 package com.wasteofserver.monitor;
 
+import com.github.kwhat.jnativehook.GlobalScreen;
+import com.github.kwhat.jnativehook.NativeHookException;
+import com.github.kwhat.jnativehook.NativeInputEvent;
+import com.github.kwhat.jnativehook.keyboard.NativeKeyEvent;
+import com.github.kwhat.jnativehook.keyboard.NativeKeyListener;
 import com.sun.jna.platform.win32.*;
 import com.sun.jna.platform.win32.WinDef.DWORDByReference;
-import org.jnativehook.GlobalScreen;
-import org.jnativehook.NativeHookException;
-import org.jnativehook.NativeInputEvent;
-import org.jnativehook.keyboard.NativeKeyEvent;
-import org.jnativehook.keyboard.NativeKeyListener;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class Application extends JFrame {
     List<WinUser.HMONITOR> monitors = new ArrayList<>();
     int currentBrightnessValue = 20;
 
-//    AbstractAction brightnessUp = new AbstractAction() {
-//        @Override
-//        public void actionPerformed(ActionEvent e) {
-//            currentBrightnessValue += 10;
-//            changeBrightness(currentBrightnessValue);
-//        }
-//    };
-//
-//    AbstractAction brightnessDown = new AbstractAction() {
-//        @Override
-//        public void actionPerformed(ActionEvent e) {
-//            changeBrightness(currentBrightnessValue);
-//        }
-//    };
-
     public static void main(String[] args) {
         // disable JNativeHook logging
-        Logger logger = Logger.getLogger(GlobalScreen.class.getPackage().getName());
-        logger.setLevel(Level.OFF);
-        logger.setUseParentHandlers(false);
+//        Logger logger = Logger.getLogger(GlobalScreen.class.getPackage().getName());
+//        logger.setLevel(Level.OFF);
+//        logger.setUseParentHandlers(false);
 
         new Application();
     }
 
     Application() {
         super("Application"); // Set the title of the JFrame
+        registerGlobalShortCuts();
 
         initMonitors();
         setGlobalBrightnessToCurrentValue();
@@ -57,7 +40,6 @@ public class Application extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // Set the default close operation
         setSize(400, 300); // Set the size of the JFrame
 
-        registerGlobalShortCuts();
 
         startOnSystemTray();
         setVisible(false);
@@ -80,7 +62,6 @@ public class Application extends JFrame {
             f.setAccessible(true);
             f.setShort(e, (short) 0x01);
         } catch (Exception ex) {
-            System.out.print("[ !! ]\n");
             ex.printStackTrace();
         }
     }
@@ -118,7 +99,6 @@ public class Application extends JFrame {
             @Override
             public void mouseClicked(MouseEvent e) {
                 if (e.getClickCount() == 2) {
-                    // Make the application visible
                     setVisible(true);
                 }
             }
@@ -183,7 +163,7 @@ public class Application extends JFrame {
         }, null);
     }
 
-    void registerGlobalShortCuts() {
+    void           registerGlobalShortCuts() {
         try {
             GlobalScreen.setEventDispatcher(new VoidDispatchService());
             GlobalScreen.registerNativeHook();
@@ -199,15 +179,15 @@ public class Application extends JFrame {
                 // Check if Ctrl+Alt+5 is pressed
                 if (e.getID() == NativeKeyEvent.NATIVE_KEY_PRESSED && (e.getModifiers() & NativeInputEvent.CTRL_MASK) != 0 && (e.getModifiers() & NativeInputEvent.ALT_MASK) != 0 && e.getKeyCode() == NativeKeyEvent.VC_5) {
                     currentBrightnessValue = changeBrightnessValue(currentBrightnessValue, -5);
-                    consumeEvent(e);
                     changeBrightness(currentBrightnessValue);
+                    consumeEvent(e);
                 }
 
                 // Check if Ctrl+Alt+6 is pressed
                 if (e.getID() == NativeKeyEvent.NATIVE_KEY_PRESSED && (e.getModifiers() & NativeInputEvent.CTRL_MASK) != 0 && (e.getModifiers() & NativeInputEvent.ALT_MASK) != 0 && e.getKeyCode() == NativeKeyEvent.VC_6) {
                     currentBrightnessValue = changeBrightnessValue(currentBrightnessValue, 5);
-                    consumeEvent(e);
                     changeBrightness(currentBrightnessValue);
+                    consumeEvent(e);
                 }
             }
 
