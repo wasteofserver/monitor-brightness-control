@@ -20,18 +20,39 @@ import java.util.List;
 public class Application extends JFrame {
     List<WinUser.HMONITOR> monitors = new ArrayList<>();
     int currentBrightnessValue = 20;
+    NativeKeyListener nativeKeyListener = new NativeKeyListener() {
+        public void nativeKeyPressed(NativeKeyEvent e) {
+            // Check if Ctrl+Alt+5 is pressed
+            if (e.getID() == NativeKeyEvent.NATIVE_KEY_PRESSED && (e.getModifiers() & NativeInputEvent.CTRL_MASK) != 0 && (e.getModifiers() & NativeInputEvent.ALT_MASK) != 0 && e.getKeyCode() == NativeKeyEvent.VC_5) {
+                currentBrightnessValue = changeBrightnessValue(currentBrightnessValue, -5);
+                changeBrightness(currentBrightnessValue);
+                consumeEvent(e);
+            }
+
+            // Check if Ctrl+Alt+6 is pressed
+            if (e.getID() == NativeKeyEvent.NATIVE_KEY_PRESSED && (e.getModifiers() & NativeInputEvent.CTRL_MASK) != 0 && (e.getModifiers() & NativeInputEvent.ALT_MASK) != 0 && e.getKeyCode() == NativeKeyEvent.VC_6) {
+                currentBrightnessValue = changeBrightnessValue(currentBrightnessValue, 5);
+                changeBrightness(currentBrightnessValue);
+                consumeEvent(e);
+            }
+        }
+
+        public void nativeKeyReleased(NativeKeyEvent e) {
+            // Nothing here
+        }
+
+        public void nativeKeyTyped(NativeKeyEvent e) {
+            // Nothing here
+        }
+    };
 
     public static void main(String[] args) {
-        // disable JNativeHook logging
-//        Logger logger = Logger.getLogger(GlobalScreen.class.getPackage().getName());
-//        logger.setLevel(Level.OFF);
-//        logger.setUseParentHandlers(false);
-
         new Application();
     }
 
     Application() {
         super("Application"); // Set the title of the JFrame
+        unregisterGlobalShortCutsShutdownHook();
         registerGlobalShortCuts();
 
         initMonitors();
@@ -163,7 +184,20 @@ public class Application extends JFrame {
         }, null);
     }
 
-    void           registerGlobalShortCuts() {
+    void unregisterGlobalShortCutsShutdownHook() {
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            try {
+                GlobalScreen.removeNativeKeyListener(nativeKeyListener);
+                GlobalScreen.unregisterNativeHook();
+            } catch (NativeHookException ex) {
+                System.err.println("There was a problem unregistering the native hook.");
+                System.err.println(ex.getMessage());
+                System.exit(1);
+            }
+        }));
+    }
+
+    void registerGlobalShortCuts() {
         try {
             GlobalScreen.setEventDispatcher(new VoidDispatchService());
             GlobalScreen.registerNativeHook();
@@ -174,31 +208,7 @@ public class Application extends JFrame {
         }
 
 
-        GlobalScreen.addNativeKeyListener(new NativeKeyListener() {
-            public void nativeKeyPressed(NativeKeyEvent e) {
-                // Check if Ctrl+Alt+5 is pressed
-                if (e.getID() == NativeKeyEvent.NATIVE_KEY_PRESSED && (e.getModifiers() & NativeInputEvent.CTRL_MASK) != 0 && (e.getModifiers() & NativeInputEvent.ALT_MASK) != 0 && e.getKeyCode() == NativeKeyEvent.VC_5) {
-                    currentBrightnessValue = changeBrightnessValue(currentBrightnessValue, -5);
-                    changeBrightness(currentBrightnessValue);
-                    consumeEvent(e);
-                }
-
-                // Check if Ctrl+Alt+6 is pressed
-                if (e.getID() == NativeKeyEvent.NATIVE_KEY_PRESSED && (e.getModifiers() & NativeInputEvent.CTRL_MASK) != 0 && (e.getModifiers() & NativeInputEvent.ALT_MASK) != 0 && e.getKeyCode() == NativeKeyEvent.VC_6) {
-                    currentBrightnessValue = changeBrightnessValue(currentBrightnessValue, 5);
-                    changeBrightness(currentBrightnessValue);
-                    consumeEvent(e);
-                }
-            }
-
-            public void nativeKeyReleased(NativeKeyEvent e) {
-                // Nothing here
-            }
-
-            public void nativeKeyTyped(NativeKeyEvent e) {
-                // Nothing here
-            }
-        });
+        GlobalScreen.addNativeKeyListener(nativeKeyListener);
     }
 
 
