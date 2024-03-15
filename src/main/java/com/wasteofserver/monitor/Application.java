@@ -133,14 +133,14 @@ public class Application extends JFrame {
             return;
         }
 
-        for (WinUser.HMONITOR hmonitor : monitors) {
+        monitors.parallelStream().forEach(hmonitor -> {
             PhysicalMonitorEnumerationAPI.PHYSICAL_MONITOR[] physMons = new PhysicalMonitorEnumerationAPI.PHYSICAL_MONITOR[1];
             if (Dxva2.INSTANCE.GetPhysicalMonitorsFromHMONITOR(hmonitor, 1, physMons).booleanValue()) {
                 WinNT.HANDLE monitor = physMons[0].hPhysicalMonitor;
                 Dxva2.INSTANCE.SetMonitorBrightness(monitor, brightness);
                 Dxva2.INSTANCE.DestroyPhysicalMonitor(monitor);
             }
-        }
+        });
     }
 
     void setGlobalBrightnessToCurrentValue() {
