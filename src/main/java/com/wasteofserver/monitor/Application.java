@@ -140,7 +140,8 @@ public class Application extends JFrame {
                 Dxva2.INSTANCE.SetMonitorBrightness(monitor, brightness);
                 Dxva2.INSTANCE.DestroyPhysicalMonitor(monitor);
             } else {
-                System.out.println("Monitor " + hmonitor + " failed to set brightness to " + brightness);
+                System.out.println("Monitor " + hmonitor + " failed to set brightness to " + brightness + ", will re-init monitors");
+                initMonitors();
             }
         });
     }
