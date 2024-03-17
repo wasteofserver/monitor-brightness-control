@@ -139,6 +139,8 @@ public class Application extends JFrame {
                 WinNT.HANDLE monitor = physMons[0].hPhysicalMonitor;
                 Dxva2.INSTANCE.SetMonitorBrightness(monitor, brightness);
                 Dxva2.INSTANCE.DestroyPhysicalMonitor(monitor);
+            } else {
+                System.out.println("Monitor " + hmonitor + " failed to set brightness to " + brightness);
             }
         });
     }
@@ -161,7 +163,8 @@ public class Application extends JFrame {
                     System.out.println("Set global current brightness to " + currentBrightnessValue);
                     currentBrightnessValue = pdwCurrentBrightness.getValue().intValue();
                 } else {
-                    System.out.println("Monitor " + hmonitor + " failed to get brightness");
+                    System.out.println("Monitor " + hmonitor + " failed to get brightness, will re-init monitors");
+                    initMonitors();
                 }
                 Dxva2.INSTANCE.DestroyPhysicalMonitor(monitor);
             }
@@ -169,6 +172,8 @@ public class Application extends JFrame {
     }
 
     void initMonitors() {
+        monitors.clear();
+
         User32.INSTANCE.EnumDisplayMonitors(null, null, new WinUser.MONITORENUMPROC() {
             int count = 0;
 
@@ -206,7 +211,6 @@ public class Application extends JFrame {
             System.err.println(ex.getMessage());
             System.exit(1);
         }
-
 
         GlobalScreen.addNativeKeyListener(nativeKeyListener);
     }
