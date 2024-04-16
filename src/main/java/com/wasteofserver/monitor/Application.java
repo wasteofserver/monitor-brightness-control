@@ -24,15 +24,15 @@ public class Application extends JFrame {
         public void nativeKeyPressed(NativeKeyEvent e) {
             // Check if Ctrl+Alt+5 is pressed
             if (e.getID() == NativeKeyEvent.NATIVE_KEY_PRESSED && (e.getModifiers() & NativeInputEvent.CTRL_MASK) != 0 && (e.getModifiers() & NativeInputEvent.ALT_MASK) != 0 && e.getKeyCode() == NativeKeyEvent.VC_5) {
-                currentBrightnessValue = changeBrightnessValue(currentBrightnessValue, -5);
-                changeBrightness(currentBrightnessValue);
+                int changeBrightnessTo = calculateNewBrightnesValue(currentBrightnessValue, -5);
+                currentBrightnessValue = changeBrightness(changeBrightnessTo);
                 consumeEvent(e);
             }
 
             // Check if Ctrl+Alt+6 is pressed
             if (e.getID() == NativeKeyEvent.NATIVE_KEY_PRESSED && (e.getModifiers() & NativeInputEvent.CTRL_MASK) != 0 && (e.getModifiers() & NativeInputEvent.ALT_MASK) != 0 && e.getKeyCode() == NativeKeyEvent.VC_6) {
-                currentBrightnessValue = changeBrightnessValue(currentBrightnessValue, 5);
-                changeBrightness(currentBrightnessValue);
+                int changeBrightnessTo = calculateNewBrightnesValue(currentBrightnessValue, 5);
+                currentBrightnessValue = changeBrightness(changeBrightnessTo);
                 consumeEvent(e);
             }
         }
@@ -66,7 +66,7 @@ public class Application extends JFrame {
         setVisible(false);
     }
 
-    static int changeBrightnessValue(int currentBrightness, int change) {
+    static int calculateNewBrightnesValue(int currentBrightness, int change) {
         int newBrightness = currentBrightness + change;
         if (newBrightness > 100) {
             newBrightness = 100;
@@ -127,10 +127,15 @@ public class Application extends JFrame {
         return trayIcon;
     }
 
-    void changeBrightness(int brightness) {
+    int changeBrightness(int brightness) {
         if (brightness > 100 || brightness < 0) {
             System.out.println("Brightness should be between 0 and 100");
-            return;
+            return currentBrightnessValue;
+        }
+
+        if (currentBrightnessValue == brightness) {
+            System.out.println("Brightness is already at " + brightness);
+            return currentBrightnessValue;
         }
 
         monitors.parallelStream().forEach(hmonitor -> {
@@ -144,6 +149,8 @@ public class Application extends JFrame {
                 initMonitors();
             }
         });
+
+        return brightness;
     }
 
     void setGlobalBrightnessToCurrentValue() {
@@ -158,9 +165,6 @@ public class Application extends JFrame {
 
                 if (Dxva2.INSTANCE.GetMonitorBrightness(monitor, pdwMinimumBrightness, pdwCurrentBrightness, pdwMaximumBrightness).booleanValue()) {
                     currentBrightnessValue = pdwCurrentBrightness.getValue().intValue();
-//                    System.out.println("Monitor " + hmonitor + " currentBrightness: " + pdwCurrentBrightness.getValue());
-//                    System.out.println("Monitor " + hmonitor + " minBrightness: " + pdwMinimumBrightness.getValue());
-//                    System.out.println("Monitor " + hmonitor + " maxBrightness: " + pdwMaximumBrightness.getValue());
                     System.out.println("Set global current brightness to " + currentBrightnessValue);
                     currentBrightnessValue = pdwCurrentBrightness.getValue().intValue();
                 } else {
